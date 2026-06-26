@@ -240,7 +240,7 @@ fun CitiesScreen(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = state.error ?: "Что-то пошло не так",
+                                    text = state.error,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.error
                                 )
