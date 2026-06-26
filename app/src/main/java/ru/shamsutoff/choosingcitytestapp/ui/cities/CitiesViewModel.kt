@@ -47,7 +47,7 @@ class CitiesViewModel(
                     isLoading = false,
                     isLoadingMore = false,
                     isOffline = true,
-                    error = "No internet connection"
+                    error = "Нет подключения к интернету"
                 )
             }
             return@intent
@@ -78,7 +78,7 @@ class CitiesViewModel(
                 state.copy(
                     isLoading = false,
                     isLoadingMore = false,
-                    error = throwable.message ?: "Unknown error"
+                    error = throwable.message ?: "Неизвестная ошибка"
                 )
             }
         }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -17,14 +18,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,15 +35,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
 import ru.shamsutoff.choosingcitytestapp.domain.model.City
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun CitiesScreen(
@@ -69,7 +72,7 @@ fun CitiesScreen(
             val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()
                 ?: return@derivedStateOf false
             lastVisibleItem.index >= listState.layoutInfo.totalItemsCount - 3
-                    && state.hasMore && !state.isLoadingMore
+                && state.hasMore && !state.isLoadingMore
         }
     }
 
@@ -87,34 +90,65 @@ fun CitiesScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Cities",
+                text = "Список городов",
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 16.dp, bottom = 12.dp)
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 19.sp,
+                textAlign = TextAlign.Center,
+                lineHeight = 26.sp,
+                modifier = Modifier
+                    .padding(top = 16.dp, bottom = 12.dp)
+                    .fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = state.query,
                 onValueChange = viewModel::onQueryChanged,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search city...") },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                placeholder = {
+                    Text(
+                        text = "Введите название города",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                },
+                leadingIcon = null,
+                trailingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Поиск",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedContainerColor = Color(0xFFF6F6F7),
+                    unfocusedContainerColor = Color(0xFFF6F6F7),
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        alpha = 0.6f
+                    ),
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                        alpha = 0.6f
+                    )
+                ),
+                textStyle = MaterialTheme.typography.bodyLarge,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             when {
                 state.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    CitiesLoadingSkeleton()
                 }
 
                 state.isOffline || state.error != null -> {
@@ -124,13 +158,13 @@ fun CitiesScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = state.error ?: "Something went wrong",
+                            text = state.error ?: "Что-то пошло не так",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = { viewModel.retry(context) }) {
-                            Text("Retry")
+                            Text("Повторить")
                         }
                     }
                 }
@@ -141,7 +175,7 @@ fun CitiesScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No cities found",
+                            text = "Города не найдены",
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -161,6 +195,50 @@ fun CitiesScreen(
 }
 
 @Composable
+private fun CitiesLoadingSkeleton() {
+    LazyColumn {
+        items(10) {
+            SkeletonItem()
+        }
+    }
+}
+
+@Composable
+private fun SkeletonItem() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                Icons.Outlined.LocationOn,
+                contentDescription = null,
+                tint = Color.Gray.copy(alpha = 0.3f),
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(end = 12.dp)
+            )
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(16.dp),
+                shape = RoundedCornerShape(4.dp),
+                color = Color.Gray.copy(alpha = 0.2f)
+            ) {}
+        }
+
+        HorizontalDivider(Modifier, thickness = 0.5.dp, color = Color.Gray.copy(alpha = 0.15f))
+    }
+}
+
+@Composable
 private fun CitiesList(
     cities: List<City>,
     isLoadingMore: Boolean,
@@ -172,15 +250,8 @@ private fun CitiesList(
             CityCard(city = city, onClick = { onCityClick(city) })
         }
         if (isLoadingMore) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+            items(3) {
+                SkeletonItem()
             }
         }
     }
@@ -188,37 +259,33 @@ private fun CitiesList(
 
 @Composable
 private fun CityCard(city: City, onClick: () -> Unit) {
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 12.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = city.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = city.country,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            // Иконка геолокации
+            Icon(
+                Icons.Outlined.LocationOn,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(end = 12.dp)
+            )
+
             Text(
-                text = NumberFormat.getNumberInstance(Locale.US).format(city.pop),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
+                text = "${city.name}, ${city.country}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
         }
+        HorizontalDivider(Modifier, thickness = 0.5.dp, color = Color.Gray.copy(alpha = 0.15f))
     }
 }
