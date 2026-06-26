@@ -2,6 +2,7 @@ package ru.shamsutoff.choosingcitytestapp.ui.citydetail
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,15 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,15 +25,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
 import org.orbitmvi.orbit.compose.collectAsState
 import org.orbitmvi.orbit.compose.collectSideEffect
 import ru.shamsutoff.choosingcitytestapp.ui.navigation.SelectedCityHolder
 import java.net.URLEncoder
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -66,10 +69,20 @@ fun CityDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("City Info") },
+                title = {
+                    Text(
+                        text = "Информация о городе",
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
                     }
                 }
             )
@@ -77,31 +90,59 @@ fun CityDetailScreen(
     ) { innerPadding ->
         val city = state.city
         if (city != null) {
-            Column(
+            val numberFormat = DecimalFormat("#,###").apply {
+                val symbols = DecimalFormatSymbols().apply {
+                    groupingSeparator = ' '
+                }
+                decimalFormatSymbols = symbols
+            }
+
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
             ) {
-                CityDetailCard(label = "Name", value = city.name)
-                CityDetailCard(label = "Country", value = city.country)
-                CityDetailCard(
-                    label = "Population",
-                    value = NumberFormat.getNumberInstance(Locale.US).format(city.pop)
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                        .verticalScroll(rememberScrollState())
+                        .padding(bottom = 80.dp)
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    CityDetailItem(
+                        label = "Город",
+                        value = city.name
+                    )
 
+                    CityDetailItem(
+                        label = "Страна",
+                        value = city.country
+                    )
+
+                    CityDetailItem(
+                        label = "Население",
+                        value = "${numberFormat.format(city.pop)} чел"
+                    )
+                }
                 Button(
                     onClick = { viewModel.onSearchClick() },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp)
+                        .align(Alignment.BottomCenter),
+                    shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors()
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                    Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-                    Text("Search city info")
+                    Text(
+                        text = "Поиск информации о городе",
+                        fontWeight = FontWeight.W600,
+                        fontSize = 18.sp,
+                        lineHeight = 26.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
                 }
             }
         }
@@ -109,26 +150,23 @@ fun CityDetailScreen(
 }
 
 @Composable
-private fun CityDetailCard(label: String, value: String) {
-    Card(
+private fun CityDetailItem(label: String, value: String) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(vertical = 12.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        Text(
+            text = label,
+            fontWeight = FontWeight.W500,
+            fontSize = 16.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            fontWeight = FontWeight.W400,
+            fontSize = 16.sp
+        )
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

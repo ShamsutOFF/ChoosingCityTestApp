@@ -1,5 +1,6 @@
 package ru.shamsutoff.choosingcitytestapp.ui.cities
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +16,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Button
@@ -83,111 +86,192 @@ fun CitiesScreen(
     }
 
     Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
-        ) {
-            Text(
-                text = "Список городов",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 19.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 26.sp,
+        // Если ошибка - показываем специальный экран без заголовка и поиска
+        if (state.isOffline) {
+            Box(
                 modifier = Modifier
-                    .padding(top = 16.dp, bottom = 12.dp)
-                    .fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = viewModel::onQueryChanged,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                placeholder = {
-                    Text(
-                        text = "Введите название города",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                },
-                leadingIcon = null,
-                trailingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Поиск",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedContainerColor = Color(0xFFF6F6F7),
-                    unfocusedContainerColor = Color(0xFFF6F6F7),
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = 0.6f
-                    ),
-                    cursorColor = MaterialTheme.colorScheme.primary,
-                    focusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                        alpha = 0.6f
-                    )
-                ),
-                textStyle = MaterialTheme.typography.bodyLarge,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            when {
-                state.isLoading -> {
-                    CitiesLoadingSkeleton()
-                }
-
-                state.isOffline || state.error != null -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = state.error ?: "Что-то пошло не так",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.retry(context) }) {
-                            Text("Повторить")
-                        }
-                    }
-                }
-
-                state.cities.isEmpty() && state.query.isNotBlank() -> {
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
+            ) {
+                // Контент по центру
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Красный круг с крестиком
                     Box(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .size(88.dp)
+                            .background(Color(0xFFFF305A), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Города не найдены",
-                            style = MaterialTheme.typography.bodyLarge
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Ошибка",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Нет подключения к интернету",
+                        fontWeight = FontWeight.W600,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        fontSize = 23.sp,
+                        lineHeight = 26.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Проверьте соединение и попробуйте снова.\nБез интернета данные не загрузятся",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.W400,
+                        fontSize = 16.sp,
+                        lineHeight = 22.sp
+                    )
                 }
 
-                else -> {
-                    CitiesList(
-                        cities = state.cities,
-                        isLoadingMore = state.isLoadingMore,
-                        listState = listState,
-                        onCityClick = { viewModel.onCityClicked(it) }
+                Button(
+                    onClick = { viewModel.retry(context) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Попробовать снова",
+                        fontWeight = FontWeight.W600,
+                        fontSize = 18.sp,
+                        lineHeight = 26.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Text(
+                    text = "Список городов",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 19.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 26.sp,
+                    modifier = Modifier
+                        .padding(top = 16.dp, bottom = 12.dp)
+                        .fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = state.query,
+                    onValueChange = viewModel::onQueryChanged,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    placeholder = {
+                        Text(
+                            text = "Введите название города",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    },
+                    leadingIcon = null,
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = "Поиск",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = Color(0xFFF6F6F7),
+                        unfocusedContainerColor = Color(0xFFF6F6F7),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.6f
+                        ),
+                        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.6f
+                        ),
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.6f
+                        ),
+                        unfocusedTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = 0.6f
+                        )
+                    ),
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                when {
+                    state.isLoading -> {
+                        CitiesLoadingSkeleton()
+                    }
+
+                    state.error != null -> {
+                        // Другие ошибки (не оффлайн)
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = state.error ?: "Что-то пошло не так",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = { viewModel.retry(context) }) {
+                                    Text("Повторить")
+                                }
+                            }
+                        }
+                    }
+
+                    state.cities.isEmpty() && state.query.isNotBlank() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Города не найдены",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    else -> {
+                        CitiesList(
+                            cities = state.cities,
+                            isLoadingMore = state.isLoadingMore,
+                            listState = listState,
+                            onCityClick = { viewModel.onCityClicked(it) }
+                        )
+                    }
                 }
             }
         }
