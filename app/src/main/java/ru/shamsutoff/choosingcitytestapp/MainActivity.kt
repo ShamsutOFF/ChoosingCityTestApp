@@ -5,12 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import ru.shamsutoff.choosingcitytestapp.ui.navigation.AppNavGraph
+import ru.shamsutoff.choosingcitytestapp.ui.navigation.SelectedCityHolder
 import ru.shamsutoff.choosingcitytestapp.ui.theme.ChoosingCityTestAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,29 +18,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ChoosingCityTestAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    val navController = rememberNavController()
+                    AppNavGraph(
+                        navController = navController,
+                        onCitySelected = { city ->
+                            SelectedCityHolder.selectedCity = city
+                        }
                     )
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ChoosingCityTestAppTheme {
-        Greeting("Android")
     }
 }
